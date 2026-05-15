@@ -4,21 +4,6 @@ BTBattery is a Rainmeter plugin for reading Bluetooth device battery levels.
 
 Intended for wireless keyboards, mice, earbuds, controllers, and similar Bluetooth devices. The plugin first uses the normal Windows Bluetooth battery properties. For devices that do not expose battery level that way, it can use built-in HID report profiles when support has been added to the plugin.
 
-## Release Layout
-
-```text
-Release/
-  x64/BTBattery.dll
-  x86/BTBattery.dll
-Source/
-  API/
-  C++/PluginBTBattery/
-  README.md
-Examples/
-  BTBatteryExample.ini
-  README.md
-```
-
 ## Manual Installation
 
 1. Close Rainmeter.
