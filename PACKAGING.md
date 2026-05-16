@@ -27,7 +27,7 @@ Suggested package metadata:
 
 ```text
 Name: BTBatteryExample
-Author: BadMonkey
+Author: BadMonky
 Version: 1.0.0
 Minimum Rainmeter: 4
 License: MIT
