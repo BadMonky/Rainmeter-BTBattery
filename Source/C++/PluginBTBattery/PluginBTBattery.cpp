@@ -83,6 +83,7 @@ namespace
         std::wstring deviceAddress;
         bool allowContainsMatch = false;
         bool logging = false;
+        bool enableState = false;
         int pollSeconds = 30;
         bool hasValue = false;
         ULONGLONG lastSnapshotTick = 0;
@@ -804,8 +805,8 @@ namespace
         }
 
         RmLogF(measure->rm, LOG_NOTICE,
-            L"BTBattery: name='%s' address='%s' value=%d found=%d connected=%d batteryFound=%d hidBatteryFound=%d candidates=%d snapshot=%llu",
-            measure->deviceName.c_str(), measure->deviceAddress.c_str(), result.value,
+            L"BTBattery: name='%s' address='%s' value=%d output=%.0f enableState=%d found=%d connected=%d batteryFound=%d hidBatteryFound=%d candidates=%d snapshot=%llu",
+            measure->deviceName.c_str(), measure->deviceAddress.c_str(), result.value, measure->value, measure->enableState ? 1 : 0,
             result.found ? 1 : 0, result.connected ? 1 : 0, result.batteryFound ? 1 : 0,
             result.hidBatteryFound ? 1 : 0, result.candidates, result.snapshotTick);
     }
@@ -827,6 +828,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     std::wstring matchMode = ToUpper(RmReadString(rm, L"MatchMode", L"Exact"));
     measure->allowContainsMatch = matchMode == L"CONTAINS" || matchMode == L"PARTIAL" || RmReadInt(rm, L"AllowContainsMatch", 0) != 0;
     measure->logging = RmReadInt(rm, L"EnableLogging", 0) != 0;
+    measure->enableState = RmReadInt(rm, L"EnableState", 0) != 0;
     measure->pollSeconds = RmReadInt(rm, L"PollSeconds", 30);
     if (measure->pollSeconds < 1)
     {
@@ -835,7 +837,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
 
     measure->hasValue = false;
     measure->lastSnapshotTick = 0;
-    measure->value = -1.0;
+    measure->value = measure->enableState ? -1.0 : 0.0;
     *maxValue = 100.0;
 }
 
@@ -845,7 +847,7 @@ PLUGIN_EXPORT double Update(void* data)
     SnapshotCopy snapshot = GetSnapshotCopyAndQueueRefresh(measure->pollSeconds);
     if (!snapshot.hasSnapshot)
     {
-        return measure->hasValue ? measure->value : -1.0;
+        return measure->hasValue ? measure->value : (measure->enableState ? -1.0 : 0.0);
     }
 
     if (measure->hasValue && measure->lastSnapshotTick == snapshot.tick)
@@ -854,7 +856,7 @@ PLUGIN_EXPORT double Update(void* data)
     }
 
     QueryResult result = QueryBluetoothBattery(measure, snapshot);
-    measure->value = static_cast<double>(result.value);
+    measure->value = (result.value < 0 && !measure->enableState) ? 0.0 : static_cast<double>(result.value);
     measure->hasValue = true;
     measure->lastSnapshotTick = snapshot.tick;
     LogResult(measure, result);
@@ -866,6 +868,9 @@ PLUGIN_EXPORT void Finalize(void* data)
     Measure* measure = static_cast<Measure*>(data);
     delete measure;
 }
+
+
+
 
 
 
